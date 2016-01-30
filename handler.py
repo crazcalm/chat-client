@@ -3,7 +3,6 @@ from gi.repository import Gtk
 import asyncio
 import threading
 
-
 class ThreadLoop(threading.Thread):
     def __init__(self, loop):
         threading.Thread.__init__(self)
@@ -42,43 +41,69 @@ class ClientProtocol(asyncio.Protocol):
 
 
 class Handler:
-    def __init__(self, text_entry, text_box):
+    def __init__(self, window, text_entry, text_box):
+        self.window = window
         self.text_entry = text_entry
         self.text_box = text_box
         self.text_buf = self.text_box.get_buffer()
+        self.window.connect('delete-event', self.quit)
+        self.loop = None
 
     def connect_button_clicked(self, widget):
         print("connect button clicked")
-        self.loop = asyncio.get_event_loop()
-        coro = self.loop.create_connection(lambda: ClientProtocol(
-                self.text_buf, self.loop), '127.0.0.1', 3333)
+        if self.loop:
+            if not self.loop.is_running():
+                self.loop = asyncio.get_event_loop()
+                coro = self.loop.create_connection(lambda: ClientProtocol(
+                        self.text_buf, self.loop), '127.0.0.1', 3333)
 
-        self.transport, self.protocol = self.loop.run_until_complete(coro)
-        self.thread = ThreadLoop(self.loop)
-        self.thread.start()
+                self.transport, self.protocol = self.loop.run_until_complete(coro)
+                self.thread = ThreadLoop(self.loop)
+                self.thread.start()
+            else:
+                print('Loop exists and is running')
+        else:
+            print('Loop did not exist')
+            self.loop = asyncio.get_event_loop()
+            coro = self.loop.create_connection(lambda: ClientProtocol(
+                    self.text_buf, self.loop), '127.0.0.1', 3333)
+
+            self.transport, self.protocol = self.loop.run_until_complete(coro)
+            self.thread = ThreadLoop(self.loop)
+            self.thread.start()
+            
 
     def send_button_clicked(self, widget):
         print("sending")
         text = self.text_entry.get_text()
         # end_iter = self.text_buf.get_end_iter()
-        if self.loop.is_running():
-            print("loop is running")
-            self.transport.write(text.encode())
+        if self.loop:
+            if self.loop.is_running():
+                print("loop is running")
+                self.transport.write(text.encode())
+            else:
+                print("loop is not running")
+                self.tranport = None
         else:
             print("loop is not running")
-            self.tranport = None
 
+    def quit(self, *args):
+        print("quit!!!!")
+        print(args)
+        if self.loop:
+            if self.loop.is_running():
+                self.transport.write("/disconnect".encode())
+        Gtk.main_quit()
 
 builder = Gtk.Builder()
 builder.add_from_file("chat_test.glade")
 
 window = builder.get_object("window1")
-window.connect("delete-event", Gtk.main_quit)
 
 text_entry = builder.get_object("text_entry")
 text_box = builder.get_object("textbox")
 
-builder.connect_signals(Handler(text_entry, text_box))
+builder.connect_signals(Handler(window, text_entry, text_box))
 
 window.show_all()
 
