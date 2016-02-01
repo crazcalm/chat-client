@@ -32,7 +32,7 @@ class ClientProtocol(asyncio.Protocol):
         self.text_buf.insert(iter_end, "\n disconnected")
         self.transport.close()
         print("transport has closed")
-        print(dir(self.loop))
+        #print(dir(self.loop))
         print("self.loop.stop()")
         print(self.loop.stop())
 
@@ -49,50 +49,45 @@ class Handler:
         self.window.connect('delete-event', self.quit)
         self.loop = None
 
-    def connect_button_clicked(self, widget):
-        print("connect button clicked")
-        if self.loop:
-            if not self.loop.is_running():
-                self.loop = asyncio.get_event_loop()
-                coro = self.loop.create_connection(lambda: ClientProtocol(
-                        self.text_buf, self.loop), '127.0.0.1', 3333)
+    def _send_msg(self, msg):
+        self.transport.write(msg.encode())
 
-                self.transport, self.protocol = self.loop.run_until_complete(coro)
-                self.thread = ThreadLoop(self.loop)
-                self.thread.start()
+    @property
+    def _can_send_msg(self):
+        result = False
+        if self.loop:
+            if self.loop.is_running():
+                result = True
             else:
-                print('Loop exists and is running')
-        else:
-            print('Loop did not exist')
-            self.loop = asyncio.get_event_loop()
-            coro = self.loop.create_connection(lambda: ClientProtocol(
+                self.loop = None
+        return result
+
+    def connect_to_server(self, address=('127.0.0.1', 3333)):
+        self.loop = asyncio.get_event_loop()
+        coro = self.loop.create_connection(lambda: ClientProtocol(
                     self.text_buf, self.loop), '127.0.0.1', 3333)
 
-            self.transport, self.protocol = self.loop.run_until_complete(coro)
-            self.thread = ThreadLoop(self.loop)
-            self.thread.start()
-            
+        self.transport, self.protocol = self.loop.run_until_complete(coro)
+        self.thread = ThreadLoop(self.loop)
+        self.thread.start()
+
+    def connect_button_clicked(self, widget):
+        print("connect button clicked")
+        if not self._can_send_msg:
+            self.connect_to_server()
 
     def send_button_clicked(self, widget):
         print("sending")
         text = self.text_entry.get_text()
         # end_iter = self.text_buf.get_end_iter()
-        if self.loop:
-            if self.loop.is_running():
-                print("loop is running")
-                self.transport.write(text.encode())
-            else:
-                print("loop is not running")
-                self.tranport = None
-        else:
-            print("loop is not running")
+        if self._can_send_msg:
+            self._send_msg(text)
 
     def quit(self, *args):
         print("quit!!!!")
         print(args)
-        if self.loop:
-            if self.loop.is_running():
-                self.transport.write("/disconnect".encode())
+        if self._can_send_msg:
+            self._send_msg("/disconnect")
         Gtk.main_quit()
 
 builder = Gtk.Builder()
