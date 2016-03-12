@@ -2,10 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter import Menu
-from tkinter.constants import DISABLED, ACTIVE, NORMAL, END
+from tkinter.constants import DISABLED, ACTIVE, NORMAL, END, YES
+from tkinter.constants import BOTH, TOP, BOTTOM, LEFT, RIGHT, X, Y
 
 
-# TODO figure out how to subclass these!
 class Window(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -42,6 +42,7 @@ class NavTab(Menu):
         for nav_item in self.nav_items:
             self.create_new_nav_item(nav_item)
 
+
 class NavItem:
     def __init__(self, label, command=None):
         self.label = label
@@ -76,6 +77,7 @@ class ChatBox(scrolledtext.ScrolledText):
     def insert_msg(self, msg):
         self._insert(msg)
 
+
 class UserListView(ChatBox):
     def __init__(self, parent, user_list, height=20, width=30):
         super().__init__(parent, height=height, width=width)
@@ -93,6 +95,11 @@ class UserListView(ChatBox):
     def create_list(self, user_list):
         for user in user_list:
             self._insert(user)            
+
+
+def test_callback(variable):
+    print(variable.get())
+    variable.set('')
 
 if __name__ == "__main__":
     gui = Window()
@@ -115,28 +122,42 @@ if __name__ == "__main__":
     menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
 
     frame = Frame(gui)
-    frame.grid(column=0, row=0)
+    #frame.grid(column=0, row=0)
+    frame.pack(expand=YES, fill=BOTH, padx=10)
+
+    frame2 = Frame(gui)
+    #frame2.grid(column=0, row=1) 
+    frame2.pack(expand=YES, fill=BOTH, padx=10, pady=10)
 
     # creating chat box
     text_box = ChatBox(frame)
     text_box.insert_msg("Hello World")
     text_box.insert_msg("\nPlease be on a new line...")
     text_box.config(state="disabled")
-    text_box.grid(column=0, row=0)
-
+    #text_box.grid(column=0, row=0)
+    text_box.pack(side=LEFT, expand=YES, fill=BOTH, padx=10)
     # users?
     users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
 
     # creating user list view
     user_list_view = UserListView(frame, users)
-    user_list_view.grid(column=2, row=0)
+    #user_list_view.grid(column=2, row=0)
+    user_list_view.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)    
 
     # creating text entry
     msg = tk.StringVar()
-    msg_entry = ttk.Entry(frame, width=40, textvariable=msg)
-    msg_entry.grid(column=0, row=1)
+    msg_entry = ttk.Entry(frame2, width=40, textvariable=msg)
+    #msg_entry.grid(column=0, row=1)
+    msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
 
-    action = ttk.Button(frame, text="Click Me!")
-    action.grid(column=1, row=1)
+
+    # This closer idea is not bad.
+    # Maybe use lambda?
+    def test():
+        test_callback(msg)
+
+    action = ttk.Button(frame2, text="Click Me!", command=test)
+    #action.grid(column=1, row=1)
+    action.pack(side=LEFT, padx=10)
 
     gui.mainloop() 
