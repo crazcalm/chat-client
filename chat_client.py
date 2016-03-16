@@ -1,3 +1,5 @@
+import asyncio
+import threading
 import tkinter as tk
 from tkinter import ttk
 from tkinter import scrolledtext
@@ -14,9 +16,64 @@ from chat_client.gui_parts.text_box import ChatBox
 from chat_client.gui_parts.text_box import UserListView
 
 
+class ThreadLoop(threading.Thread):
+    def __init__(self, loop):
+        threading.Thread.__init__(self)
+        self.loop = loop
+
+    def run(self):
+        print("starting Thread")
+        self.loop.run_forever()
+        print("Ending Thread")
+
+
+class ClientProtocol(asyncio.Protocol):
+    def __init__(self, chat_box, loop):
+        self.chat_box = chat_box
+        self.loop = loop
+        self.trasport = None
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def data_received(self, data):
+        self.chat_box.insert_msg("\n{}".format(data.decode()))
+
+    def connection_lost(self, exc):
+        self.chat_box.insert_msg("\n disconnected")
+        self.transport.close()
+        print("transport has closed")
+        #print(dir(self.loop))
+        print("self.loop.stop()")
+        print(self.loop.stop())
+
+    def send_msg(self, message):
+        self.transport.write(message.encode())
+
 def test_callback(variable):
     print(variable.get())
     variable.set('')
+
+def test_sending_msg_callback(variable, transport=None, loop=None):
+    # Re-write later
+    msg = variable.get()
+    if transport:
+        transport.write(msg.encode())
+    else:
+        print("No transport")
+        print(msg)
+    variable.set('')
+
+def connect_to_server(chat_box, address=('127.0.0.1', 3333)):
+    loop = asyncio.get_event_loop()
+    coro = loop.create_connection(lambda: ClientProtocol(
+                chat_box, loop), '127.0.0.1', 3333)
+
+    transport, protocol = loop.run_until_complete(coro)
+    thread = ThreadLoop(loop)
+    thread.start()
+    return loop, coro, transport, protocol, thread
+
 
 if __name__ == "__main__":
     gui = Window()
@@ -63,10 +120,13 @@ if __name__ == "__main__":
     msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
 
 
+    # try connecting to the server!
+    loop, coro, transport, thread, protocal = connect_to_server(text_box)
+
     # This closer idea is not bad.
     # Maybe use lambda?
     def test():
-        test_callback(msg)
+        test_sending_msg_callback(msg, transport, loop)
 
     action = ttk.Button(frame2, text="Click Me!", command=test)
     action.pack(side=LEFT, padx=10)
