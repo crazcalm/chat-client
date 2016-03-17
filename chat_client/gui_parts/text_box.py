@@ -26,6 +26,7 @@ class ChatBox(scrolledtext.ScrolledText):
 
     def insert_msg(self, msg):
         self._insert(msg)
+        self.yview_moveto('1.0')
 
 
 class UserListView(ChatBox):
