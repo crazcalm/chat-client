@@ -131,4 +131,6 @@ if __name__ == "__main__":
     action = ttk.Button(frame2, text="Click Me!", command=test)
     action.pack(side=LEFT, padx=10)
 
+    gui.bind("<Return>", lambda e: test())
+
     gui.mainloop() 
