@@ -107,6 +107,7 @@ if __name__ == "__main__":
     text_box.insert_msg("\nPlease be on a new line...")
     text_box.config(state="disabled")
     text_box.pack(side=LEFT, expand=YES, fill=BOTH, padx=10)
+
     # users?
     users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
 
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     msg = tk.StringVar()
     msg_entry = ttk.Entry(frame2, width=40, textvariable=msg)
     msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
-
+    msg_entry.focus_set()
 
     # try connecting to the server!
     loop, coro, transport, thread, protocal = connect_to_server(text_box)
