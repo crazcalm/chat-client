@@ -2,10 +2,7 @@ import asyncio
 import threading
 import tkinter as tk
 from tkinter import ttk
-from tkinter import scrolledtext
-from tkinter import Menu
-from tkinter.constants import DISABLED, ACTIVE, NORMAL, END, YES
-from tkinter.constants import BOTH, TOP, BOTTOM, LEFT, RIGHT, X, Y
+from tkinter.constants import BOTH, LEFT, RIGHT, X, YES
 
 from chat_client.gui_parts.window import Window
 from chat_client.gui_parts.frame import Frame
@@ -43,16 +40,17 @@ class ClientProtocol(asyncio.Protocol):
         self.chat_box.insert_msg("\n disconnected")
         self.transport.close()
         print("transport has closed")
-        #print(dir(self.loop))
         print("self.loop.stop()")
         print(self.loop.stop())
 
     def send_msg(self, message):
         self.transport.write(message.encode())
 
+
 def test_callback(variable):
     print(variable.get())
     variable.set('')
+
 
 def test_sending_msg_callback(variable, transport=None, loop=None):
     # Re-write later
@@ -63,6 +61,7 @@ def test_sending_msg_callback(variable, transport=None, loop=None):
         print("No transport")
         print(msg)
     variable.set('')
+
 
 def connect_to_server(chat_box, address=('127.0.0.1', 3333)):
     loop = asyncio.get_event_loop()
@@ -83,12 +82,12 @@ if __name__ == "__main__":
     gui.configure(menu=menu_bar)
 
     # creating menu tabs items
-    file_tab_nav_items = [NavItem("Quit"), NavItem("Connect"), 
-        NavItem("Disconnect")]
+    file_tab_nav_items = [NavItem("Quit"), NavItem("Connect"),
+                          NavItem("Disconnect")]
     edit_tab_nav_items = [NavItem("Profile"), NavItem("Status")]
-    
+
     # creating menu tabs
-    file_tab = NavTab(menu_bar,"File", nav_items=file_tab_nav_items)
+    file_tab = NavTab(menu_bar, "File", nav_items=file_tab_nav_items)
     edit_tab = NavTab(menu_bar, "Edit", nav_items=edit_tab_nav_items)
 
     # adding tabs to menu bar
@@ -113,7 +112,7 @@ if __name__ == "__main__":
 
     # creating user list view
     user_list_view = UserListView(frame, users)
-    user_list_view.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)    
+    user_list_view.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)
 
     # creating text entry
     msg = tk.StringVar()
@@ -134,4 +133,4 @@ if __name__ == "__main__":
 
     gui.bind("<Return>", lambda e: test())
 
-    gui.mainloop() 
+    gui.mainloop()
