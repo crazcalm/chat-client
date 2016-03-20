@@ -11,6 +11,8 @@ from chat_client.gui_parts.nav_bar import NavTab
 from chat_client.gui_parts.nav_bar import NavItem
 from chat_client.gui_parts.text_box import ChatBox
 from chat_client.gui_parts.text_box import UserListView
+import pdb
+from time import sleep
 
 
 class ThreadLoop(threading.Thread):
@@ -40,8 +42,8 @@ class ClientProtocol(asyncio.Protocol):
         self.chat_box.insert_msg("\n disconnected")
         self.transport.close()
         print("transport has closed")
-        print("self.loop.stop()")
         print(self.loop.stop())
+        print("stopping the loop")
 
     def send_msg(self, message):
         self.transport.write(message.encode())
@@ -52,7 +54,7 @@ def test_callback(variable):
     variable.set('')
 
 
-def test_sending_msg_callback(variable, transport=None, loop=None):
+def test_sending_msg_callback(variable, transport=None, loop=None, thread=None):
     # Re-write later
     msg = variable.get()
     if transport:
@@ -74,26 +76,14 @@ def connect_to_server(chat_box, address=('127.0.0.1', 3333)):
     return loop, coro, transport, protocol, thread
 
 
+def _disconnect(gui, transport, loop):
+    if loop.is_running():
+        transport.write("/disconnect".encode())
+
 if __name__ == "__main__":
     gui = Window()
 
-    # menu?
-    menu_bar = NavMenu(gui)
-    gui.configure(menu=menu_bar)
-
-    # creating menu tabs items
-    file_tab_nav_items = [NavItem("Quit"), NavItem("Connect"),
-                          NavItem("Disconnect")]
-    edit_tab_nav_items = [NavItem("Profile"), NavItem("Status")]
-
-    # creating menu tabs
-    file_tab = NavTab(menu_bar, "File", nav_items=file_tab_nav_items)
-    edit_tab = NavTab(menu_bar, "Edit", nav_items=edit_tab_nav_items)
-
-    # adding tabs to menu bar
-    menu_bar.add_cascade(label=file_tab.label, menu=file_tab)
-    menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
-
+    # create the main frames
     frame = Frame(gui)
     frame.pack(expand=YES, fill=BOTH, padx=10)
 
@@ -107,6 +97,30 @@ if __name__ == "__main__":
     text_box.config(state="disabled")
     text_box.pack(side=LEFT, expand=YES, fill=BOTH, padx=10)
 
+    # try connecting to the server!
+    loop, coro, transport, thread, protocal = connect_to_server(text_box)
+
+    # testing this out
+    def disconnect():
+        _disconnect(gui, transport, loop)
+
+    # menu?
+    menu_bar = NavMenu(gui)
+    gui.configure(menu=menu_bar)
+
+    # creating menu tabs items
+    file_tab_nav_items = [NavItem("Quit"), NavItem("Connect"),
+                          NavItem("Disconnect", disconnect)]
+    edit_tab_nav_items = [NavItem("Profile"), NavItem("Status")]
+
+    # creating menu tabs
+    file_tab = NavTab(menu_bar, "File", nav_items=file_tab_nav_items)
+    edit_tab = NavTab(menu_bar, "Edit", nav_items=edit_tab_nav_items)
+
+    # adding tabs to menu bar
+    menu_bar.add_cascade(label=file_tab.label, menu=file_tab)
+    menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
+
     # users?
     users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
 
@@ -119,9 +133,6 @@ if __name__ == "__main__":
     msg_entry = ttk.Entry(frame2, width=40, textvariable=msg)
     msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
     msg_entry.focus_set()
-
-    # try connecting to the server!
-    loop, coro, transport, thread, protocal = connect_to_server(text_box)
 
     # This closer idea is not bad.
     # Maybe use lambda?

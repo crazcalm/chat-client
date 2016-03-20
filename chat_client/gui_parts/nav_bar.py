@@ -21,7 +21,7 @@ class NavTab(Menu):
 
     def create_new_nav_item(self, nav_item):
         self.add_command(label=nav_item.label,
-            command=nav_item.label)
+            command=nav_item.command)
     
     def create_nav_items(self):
         for nav_item in self.nav_items:
