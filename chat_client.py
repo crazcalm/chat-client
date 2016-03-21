@@ -80,68 +80,81 @@ def _disconnect(gui, transport, loop):
     if loop.is_running():
         transport.write("/disconnect".encode())
 
+class App:
+    def __init__(self, window=Window, chatbox=ChatBox, frame=Frame,
+                 nav_menu=NavMenu, nav_item=NavItem, nav_tab=NavTab,
+                 user_list_view=UserListView):
+        # Main gui
+        self.gui = window()
+
+        # Frame in charge of chatbox?
+        self.frame1 = frame(self.gui)
+        self.frame1.pack(expand=YES, fill=BOTH, padx=10)
+
+        # Frame in charge of user list box?
+        self.frame2 = frame(self.gui)
+        self.frame2.pack(expand=YES, fill=BOTH, padx=10, pady=10)
+
+        # Look into adding state to the init
+        self.textbox = chatbox(self.frame1)
+        self.textbox.config(state="disabled")
+        self.textbox.pack(side=LEFT, expand=YES, fill=BOTH, padx=10)
+
+        # Testing: connect to server immediately
+        self.connect_to_server()
+
+        # menu bar is next
+        self.menu_bar = NavMenu(self.gui)
+        self.gui.configure(menu=self.menu_bar)
+
+        # creating menu tabs items
+        file_tab_nav_items = [nav_item("Quit"), nav_item("Connect"),
+                              nav_item("Disconnect", self.disconnect)]
+        edit_tab_nav_items = [nav_item("Profile"), 
+                              nav_item("Status")]
+
+        # creating menu tabs
+        file_tab = nav_tab(self.menu_bar, "File", nav_items=file_tab_nav_items)
+        edit_tab = nav_tab(self.menu_bar, "Edit", nav_items=edit_tab_nav_items)
+
+        # adding tabs to menu bar
+        self.menu_bar.add_cascade(label=file_tab.label, menu=file_tab)
+        self.menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
+
+        # users?
+        users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
+
+        # creating user list view
+        self.user_list = user_list_view(self.frame1, users)
+        self.user_list.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)
+
+        # creating text entry
+        self.msg = tk.StringVar()
+        self.msg_entry = ttk.Entry(self.frame2, width=40, 
+                                   textvariable=self.msg)
+        self.msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
+        self.msg_entry.focus_set()
+
+        # This closer idea is not bad.
+        # Maybe use lambda?
+        def test():
+            test_sending_msg_callback(self.msg, self.transport, self.loop)
+
+        self.action = ttk.Button(self.frame2, text="Click Me!", command=test)
+        self.action.pack(side=LEFT, padx=10)
+
+        self.gui.bind("<Return>", lambda e: test())
+
+        self.gui.mainloop()
+
+    def connect_to_server(self):
+        self.loop, self.coro, self.transport, self.protocol, self.thread =\
+            connect_to_server(self.textbox)
+
+    def disconnect(self):
+        _disconnect(self.gui, self.transport, self.loop)
+
+    
+
 if __name__ == "__main__":
-    gui = Window()
-
-    # create the main frames
-    frame = Frame(gui)
-    frame.pack(expand=YES, fill=BOTH, padx=10)
-
-    frame2 = Frame(gui)
-    frame2.pack(expand=YES, fill=BOTH, padx=10, pady=10)
-
-    # creating chat box
-    text_box = ChatBox(frame)
-    text_box.insert_msg("Hello World")
-    text_box.insert_msg("\nPlease be on a new line...")
-    text_box.config(state="disabled")
-    text_box.pack(side=LEFT, expand=YES, fill=BOTH, padx=10)
-
-    # try connecting to the server!
-    loop, coro, transport, thread, protocal = connect_to_server(text_box)
-
-    # testing this out
-    def disconnect():
-        _disconnect(gui, transport, loop)
-
-    # menu?
-    menu_bar = NavMenu(gui)
-    gui.configure(menu=menu_bar)
-
-    # creating menu tabs items
-    file_tab_nav_items = [NavItem("Quit"), NavItem("Connect"),
-                          NavItem("Disconnect", disconnect)]
-    edit_tab_nav_items = [NavItem("Profile"), NavItem("Status")]
-
-    # creating menu tabs
-    file_tab = NavTab(menu_bar, "File", nav_items=file_tab_nav_items)
-    edit_tab = NavTab(menu_bar, "Edit", nav_items=edit_tab_nav_items)
-
-    # adding tabs to menu bar
-    menu_bar.add_cascade(label=file_tab.label, menu=file_tab)
-    menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
-
-    # users?
-    users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
-
-    # creating user list view
-    user_list_view = UserListView(frame, users)
-    user_list_view.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)
-
-    # creating text entry
-    msg = tk.StringVar()
-    msg_entry = ttk.Entry(frame2, width=40, textvariable=msg)
-    msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
-    msg_entry.focus_set()
-
-    # This closer idea is not bad.
-    # Maybe use lambda?
-    def test():
-        test_sending_msg_callback(msg, transport, loop)
-
-    action = ttk.Button(frame2, text="Click Me!", command=test)
-    action.pack(side=LEFT, padx=10)
-
-    gui.bind("<Return>", lambda e: test())
-
-    gui.mainloop()
+    test = App()
