@@ -11,8 +11,6 @@ from chat_client.gui_parts.nav_bar import NavTab
 from chat_client.gui_parts.nav_bar import NavItem
 from chat_client.gui_parts.text_box import ChatBox
 from chat_client.gui_parts.text_box import UserListView
-import pdb
-from time import sleep
 
 
 class ThreadLoop(threading.Thread):
@@ -54,7 +52,8 @@ def test_callback(variable):
     variable.set('')
 
 
-def test_sending_msg_callback(variable, transport=None, loop=None, thread=None):
+def test_sending_msg_callback(variable, transport=None, loop=None,
+                              thread=None):
     # Re-write later
     msg = variable.get()
     if transport:
@@ -80,10 +79,14 @@ def _disconnect(gui, transport, loop):
     if loop.is_running():
         transport.write("/disconnect".encode())
 
+
 class App:
     def __init__(self, window=Window, chatbox=ChatBox, frame=Frame,
                  nav_menu=NavMenu, nav_item=NavItem, nav_tab=NavTab,
                  user_list_view=UserListView):
+        # Variables that will be needed
+        self.loop = None
+
         # Main gui
         self.gui = window()
 
@@ -110,7 +113,7 @@ class App:
         # creating menu tabs items
         file_tab_nav_items = [nav_item("Quit"), nav_item("Connect"),
                               nav_item("Disconnect", self.disconnect)]
-        edit_tab_nav_items = [nav_item("Profile"), 
+        edit_tab_nav_items = [nav_item("Profile"),
                               nav_item("Status")]
 
         # creating menu tabs
@@ -130,31 +133,31 @@ class App:
 
         # creating text entry
         self.msg = tk.StringVar()
-        self.msg_entry = ttk.Entry(self.frame2, width=40, 
+        self.msg_entry = ttk.Entry(self.frame2, width=40,
                                    textvariable=self.msg)
         self.msg_entry.pack(side=LEFT, expand=YES, fill=X, padx=10)
         self.msg_entry.focus_set()
 
-        # This closer idea is not bad.
-        # Maybe use lambda?
-        def test():
-            test_sending_msg_callback(self.msg, self.transport, self.loop)
-
-        self.action = ttk.Button(self.frame2, text="Click Me!", command=test)
+        self.action = ttk.Button(self.frame2, text="Click Me!",
+                                 command=self.send_msg_callback)
         self.action.pack(side=LEFT, padx=10)
 
-        self.gui.bind("<Return>", lambda e: test())
+        self.gui.bind("<Return>", lambda e: self.send_msg_callback())
 
         self.gui.mainloop()
 
     def connect_to_server(self):
-        self.loop, self.coro, self.transport, self.protocol, self.thread =\
-            connect_to_server(self.textbox)
+        if not self.loop:
+            self.loop, self.coro, self.transport, self.protocol,\
+                self.thread = connect_to_server(self.textbox)
 
     def disconnect(self):
         _disconnect(self.gui, self.transport, self.loop)
+        self.loop = None
 
-    
+    def send_msg_callback(self):
+        test_sending_msg_callback(self.msg, self.transport, self.loop)
+
 
 if __name__ == "__main__":
     test = App()
