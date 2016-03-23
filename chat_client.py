@@ -37,7 +37,6 @@ class ClientProtocol(asyncio.Protocol):
         self.chat_box.insert_msg("\n{}".format(data.decode()))
 
     def connection_lost(self, exc):
-        self.chat_box.insert_msg("\n disconnected")
         self.transport.close()
         print("transport has closed")
         print(self.loop.stop())
@@ -111,7 +110,7 @@ class App:
         self.gui.configure(menu=self.menu_bar)
 
         # creating menu tabs items
-        file_tab_nav_items = [nav_item("Quit"), nav_item("Connect"),
+        file_tab_nav_items = [nav_item("Connect", self.connect_to_server),
                               nav_item("Disconnect", self.disconnect)]
         edit_tab_nav_items = [nav_item("Profile"),
                               nav_item("Status")]
