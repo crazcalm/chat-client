@@ -2,7 +2,7 @@ import asyncio
 import threading
 import tkinter as tk
 from tkinter import ttk
-from tkinter.constants import BOTH, LEFT, RIGHT, X, YES
+from tkinter.constants import BOTH, LEFT, X, YES
 
 from chat_client.gui_parts.window import Window
 from chat_client.gui_parts.frame import Frame
@@ -10,7 +10,6 @@ from chat_client.gui_parts.nav_bar import NavMenu
 from chat_client.gui_parts.nav_bar import NavTab
 from chat_client.gui_parts.nav_bar import NavItem
 from chat_client.gui_parts.text_box import ChatBox
-from chat_client.gui_parts.text_box import UserListView
 
 
 class ThreadLoop(threading.Thread):
@@ -81,8 +80,7 @@ def _disconnect(gui, transport, loop):
 
 class App:
     def __init__(self, window=Window, chatbox=ChatBox, frame=Frame,
-                 nav_menu=NavMenu, nav_item=NavItem, nav_tab=NavTab,
-                 user_list_view=UserListView):
+                 nav_menu=NavMenu, nav_item=NavItem, nav_tab=NavTab):
         # Variables that will be needed
         self.loop = None
 
@@ -122,13 +120,6 @@ class App:
         # adding tabs to menu bar
         self.menu_bar.add_cascade(label=file_tab.label, menu=file_tab)
         self.menu_bar.add_cascade(label=edit_tab.label, menu=edit_tab)
-
-        # users?
-        users = ["\nMarcus", "\nWillock", "\nCrazcalm"]
-
-        # creating user list view
-        self.user_list = user_list_view(self.frame1, users)
-        self.user_list.pack(side=RIGHT, expand=YES, fill=BOTH, padx=10)
 
         # creating text entry
         self.msg = tk.StringVar()
