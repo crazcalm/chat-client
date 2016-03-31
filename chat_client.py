@@ -36,9 +36,12 @@ class ClientProtocol(asyncio.Protocol):
         sleep(1)
         self.transport.write("/CLIENT**: USER LIST".encode())
 
+    def set_as_client(self):
+        self.transport.write("/CLIENT**: TRUE".encode())
+
     def connection_made(self, transport):
         self.transport = transport
-        self.get_user_list()
+        self.set_as_client()
 
     def data_received(self, data):
         msg = data.decode()
