@@ -46,7 +46,7 @@ class ClientProtocol(asyncio.Protocol):
     def data_received(self, data):
         msg = data.decode()
 
-        if msg.startswith("CLIENT**:"):
+        if msg.startswith("CLIENT**:"):  # Fine for now
             client_info = msg.split(":", 1)[1].strip()
             self.user_list.delete_all()
             self.user_list.create_list(client_info.split(","))
